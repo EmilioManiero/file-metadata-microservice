@@ -1,20 +1,42 @@
-var express = require('express');
-var cors = require('cors');
-require('dotenv').config()
 
-var app = express();
+require('dotenv').config();
 
-app.use(cors());
-app.use('/public', express.static(process.cwd() + '/public'));
+const express = require('express');
+const cors = require('cors');
+const multer = require('multer');
 
-app.get('/', function (req, res) {
-  res.sendFile(process.cwd() + '/views/index.html');
+const app = express();
+const upload = multer({ storage: multer.memoryStorage() });
+
+// Habilitar CORS
+app.use(cors({ optionsSuccessStatus: 200 }));
+
+// Archivos estáticos
+app.use(express.static('public'));
+
+// Página principal
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/views/index.html');
 });
 
+// API para recibir archivos
+app.post('/api/fileanalyse', upload.single('upfile'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({
+      error: 'No file uploaded'
+    });
+  }
 
+  res.json({
+    name: req.file.originalname,
+    type: req.file.mimetype,
+    size: req.file.size
+  });
+});
 
+// Iniciar servidor
+const PORT = process.env.PORT || 3000;
 
-const port = process.env.PORT || 3000;
-app.listen(port, function () {
-  console.log('Your app is listening on port ' + port)
+app.listen(PORT, '0.0.0.0', () => {
+  console.log('Server running on port ' + PORT);
 });
